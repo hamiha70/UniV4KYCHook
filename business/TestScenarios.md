@@ -1,4 +1,26 @@
-# Testing #
+# End to End Test Scenarios   # 
+
+**Project**:  KYC - Hook
+
+**Team**: Hami and Eyal
+
+### Policies ###
+Policies is the mechanism through which it is determind whether an enduser, a swapper or liquidity provider is eligable to swap or provide liquidity to the pool under the protection of the policy. A policy can be attached to a router and/or a hook, and there is no requirment that there be coherance between the two. We work with two key policies
+
+- **Blacklisting**: The policy has a list of addresses that are forbiden to interact with the liquidity protected by the policy, Blacklisting is used extgensivly by Circle to protect their USDC brand.  
+
+- **KYCTokenPolicy**: The policy  is tied to an ECR-721 contract providing users NFTs certiying submission of documentrs for verfying their Id. The  policy extractrs from these documents a profile of doc verification the is comparied with a policy standard and throiugh this eligability iks determind
+
+The hook also implements whitlisting of routers, but this will  not be considered a policy. 
+
+### Routers ###
+We work with two router implementations
+- **Easy Router**: A router that does not have a policy attached,and does not provide KYC protection, but identifies whether the pool call is KYC protected and provide msg.sender information accordiangly to the hook.  
+- **AvantGuard**: A router providing KYC protection through a policy as well as sending upstrea information depemndiong on whether ther request is for a KYC protected or KYC free pook. 
+- **v4-periphery**: Standard router does not make any adjustments for KYC protected pools
+
+### Hooks ###
+We will worlk with one implementayion of hook. Instances of the contract could be tied to a policy or policy free. It is up to the router to determin whether am instance has an attached policy and mske the swap call appropriatly
 
 ### Deployments ###
 
