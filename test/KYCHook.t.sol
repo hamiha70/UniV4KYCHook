@@ -15,7 +15,7 @@ import {PoolSwapTest} from "v4-core/test/PoolSwapTest.sol";
 import {PoolModifyLiquidityTest} from "v4-core/test/PoolModifyLiquidityTest.sol";
 import {StateLibrary} from "v4-core/libraries/StateLibrary.sol";
 
-import {KYCHook, InitializeHookWithKYCParams} from "../src/Hooks/KYCHook.sol";
+import {KYCHook, InitializeHookWithKYCParams} from "../src/hooks/KYCHook.sol";
 import {BlacklistPolicy} from "../src/policies/BlacklistPolicy.sol";
 import {WhitelistPolicy} from "../src/policies/WhitelistPolicy.sol";
 import {BlackWhitelistPolicy} from "../src/policies/BlackWhitelistPolicy.sol";

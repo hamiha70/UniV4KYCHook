@@ -14,7 +14,7 @@ import {Hooks} from "v4-core/libraries/Hooks.sol";
 import {PoolSwapTest} from "v4-core/test/PoolSwapTest.sol";
 import {StateLibrary} from "v4-core/libraries/StateLibrary.sol";
 
-import {KYCDummyHook} from "../src/hooks/KYCDummyHook.sol";
+import {KYCDummyHook} from "../src/base/KYCDummyHook.sol";
 import {KYCDummyPolicy} from "../src/policies/KYCDummyPolicy.sol";
 import {Policy} from "../src/base/Policy.sol";
 

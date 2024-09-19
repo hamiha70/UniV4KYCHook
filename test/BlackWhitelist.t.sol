@@ -14,7 +14,7 @@ import {Hooks} from "v4-core/libraries/Hooks.sol";
 import {PoolSwapTest} from "v4-core/test/PoolSwapTest.sol";
 import {StateLibrary} from "v4-core/libraries/StateLibrary.sol";
 
-import {KYCBaseHook, NoKYCPermission} from "../src/hooks/KYCBaseHook.sol";
+import {KYCBaseHook, NoKYCPermission} from "../src/base/KYCBaseHook.sol";
 import {KYCPolicy} from "../src/base/KYCPolicy.sol";
 import {BlacklistPolicy} from "../src/policies/BlacklistPolicy.sol";
 import {WhitelistPolicy} from "../src/policies/WhitelistPolicy.sol";

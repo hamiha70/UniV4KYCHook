@@ -11,7 +11,7 @@ import {PoolId, PoolIdLibrary} from "v4-core/types/PoolId.sol";
 import {Hooks} from "v4-core/libraries/Hooks.sol";
 import {IHooks} from "v4-core/interfaces/IHooks.sol";
 import {LazyRouter} from "../src/routers/LazyRouter.sol";
-import {KYCHook, InitializeHookWithKYCParams} from "../src/Hooks/KYCHook.sol";
+import {KYCHook, InitializeHookWithKYCParams} from "../src/hooks/KYCHook.sol";
 import {BlacklistPolicy} from "../src/policies/BlacklistPolicy.sol";
 import {WhitelistPolicy} from "../src/policies/WhitelistPolicy.sol";
 import {KYCEvents} from "../src/utils/events.sol";

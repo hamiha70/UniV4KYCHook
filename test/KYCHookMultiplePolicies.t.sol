@@ -15,7 +15,7 @@ import {IHooks} from "v4-core/interfaces/IHooks.sol";
 import {PoolSwapTest} from "v4-core/test/PoolSwapTest.sol";
 import {StateLibrary} from "v4-core/libraries/StateLibrary.sol";
 
-import {KYCHookMultiplePolicies, InitializeSettings} from "../src/Hooks/KYCHookMultiplePolicies.sol";
+import {KYCHookMultiplePolicies, InitializeSettings} from "../src/hooks/KYCHookMultiplePolicies.sol";
 import {BlacklistPolicy} from "../src/policies/BlacklistPolicy.sol";
 import {WhitelistPolicy} from "../src/policies/WhitelistPolicy.sol";
 import {BlackWhitelistPolicy} from "../src/policies/BlackWhitelistPolicy.sol";

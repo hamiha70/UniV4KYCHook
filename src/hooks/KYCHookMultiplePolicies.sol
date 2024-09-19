@@ -18,9 +18,6 @@ error NoKYCPermission(address router, address user);
 error InvalidPolicyAddress(address policyContractAddress);
 error OnlyRegisterPoolsWithKYCRequired();
 error PoolAlreadyInitialized();
-error KYCHook__PolicyNotRegistered(address policyContractAddress);
-error KYCHook__InvalidInitializeHookData(bytes hookData);
-error KYCHook__PolicyMisbehaving__CallToMsgSenderFromHookDataReverted();
 
 struct InitializeSettings {
     address policyContractAddress;

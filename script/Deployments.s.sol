@@ -7,7 +7,7 @@ import {HelperConfig, CodeConstants, SepoliaEthereumConstants, EnvLookups} from 
 import {console} from "forge-std/console.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
-import {KYCHook, InitializeHookWithKYCParams} from "../src/Hooks/KYCHook.sol";
+import {KYCHook, InitializeHookWithKYCParams} from "../src/hooks/KYCHook.sol";
 import {BlacklistPolicy} from "../src/policies/BlacklistPolicy.sol";
 import {WhitelistPolicy} from "../src/policies/WhitelistPolicy.sol";
 import {BlackWhitelistPolicy} from "../src/policies/BlackWhitelistPolicy.sol";

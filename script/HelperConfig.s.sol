@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {Script} from "forge-std/Script.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
-import {KYCHook} from "../src/Hooks/KYCHook.sol";
+import {KYCHook} from "../src/hooks/KYCHook.sol";
 /* import {KYCHook_byWhitelist} from "../src/Hooks/KYCHook_byWhitelistc.sol"; */
 import {WhitelistPolicy} from "../src/policies/WhitelistPolicy.sol";
 import {BlacklistPolicy} from "../src/policies/BlacklistPolicy.sol";

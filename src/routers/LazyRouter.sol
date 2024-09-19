@@ -12,7 +12,7 @@ import {PoolTestBase} from "v4-core/test/PoolTestBase.sol";
 import {CurrencySettler} from "@uniswap/v4-core/test/utils/CurrencySettler.sol";
 import {KYCEvents} from "../utils/events.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {KYCHook} from "../Hooks/KYCHook.sol";
+import {KYCHook} from "../hooks/KYCHook.sol";
 import {KYCPolicy} from "../base/KYCPolicy.sol";
 
 // Errors
