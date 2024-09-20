@@ -1,0 +1,13 @@
+[submodule "lib/forge-std"]
+	path = lib/forge-std
+	url = ../forge-std.git
+[submodule "lib/v4-periphery"]
+	path = lib/v4-periphery
+	url = ../v4-periphery.git
+[submodule "lib/foundry-devops"]
+	path = lib/foundry-devops
+	url = ../foundry-devops.git
+[submodule "lib/chainlink-brownie-contracts"]
+	path = lib/chainlink-brownie-contracts
+	url = https://github.com/smartcontractkit/chainlink-brownie-contracts
+

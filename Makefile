@@ -20,7 +20,11 @@ clean  :; forge clean
 # Remove modules
 remove :; rm -rf .gitmodules && rm -rf .git/modules/* && rm -rf lib && touch .gitmodules && git add . && git commit -m "modules"
 
-install :; forge install https://github.com/Uniswap/v4-periphery --no-commit && forge install cyfrin/foundry-devops --no-commit && forge install chainlink/chainlink-brownie-contracts --no-commit
+install-cyfrin-foundry-devops :; forge install git@github.com:Cyfrin/foundry-devops --no-commit
+install-chainlink-brownie-contracts :; forge install git@github.com:smartcontractkit/chainlink-brownie-contracts --no-commit
+install-uniV4-periphery :; forge install git@github.com:Uniswap/v4-periphery --no-commit
+# Base directory already includes uniswap v4 periphery and cyfrin-foundry-devops
+install :; make install-chainlink-brownie-contracts 
 
 # Update Dependencies
 update:; forge update
