@@ -19,7 +19,7 @@ This document outlines the technical prerequisites and deployment steps for the 
 make install
 ```
 
-This will install Chainlink Brownie Contracts and other necessary dependencies.
+This will install Chainlink Brownie Contracts, Brevis Contracts and other necessary dependencies.
 
 ## Environment Setup
 
@@ -109,6 +109,7 @@ For each command, you can specify the network by adding `ARGS="--network <networ
 ## Dependencies
 
 - [Chainlink Brownie Contracts](https://github.com/smartcontractkit/chainlink-brownie-contracts)
+- [Brevis Contracts](https://github.com/brevis-network/brevis-contracts)
 - [Uniswap V4 Periphery](https://github.com/Uniswap/v4-periphery)
 - [Cyfrin Foundry Devops](https://github.com/Cyfrin/foundry-devops)
 

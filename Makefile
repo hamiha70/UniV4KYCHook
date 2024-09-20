@@ -22,9 +22,10 @@ remove :; rm -rf .gitmodules && rm -rf .git/modules/* && rm -rf lib && touch .gi
 
 install-cyfrin-foundry-devops :; forge install git@github.com:Cyfrin/foundry-devops --no-commit
 install-chainlink-brownie-contracts :; forge install git@github.com:smartcontractkit/chainlink-brownie-contracts --no-commit
+install-brevis-contracts :; forge install git@github.com:brevis-network/brevis-contracts --no-commit
 install-uniV4-periphery :; forge install git@github.com:Uniswap/v4-periphery --no-commit
 # Base directory already includes uniswap v4 periphery and cyfrin-foundry-devops
-install :; make install-chainlink-brownie-contracts 
+install :; make install-chainlink-brownie-contracts && make install-brevis-contracts
 
 # Update Dependencies
 update:; forge update
