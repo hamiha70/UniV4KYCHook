@@ -683,7 +683,7 @@ contract KYCRouterTest is Test, Deployers, KYCEvents {
         console.log("Swap settings test completed\n");
     }
 
-    function test_KYCRouter_nativeCurrency() public {
+    function test_KYCRouter_nativeCurrency() public pure {
         // TODO: MAKE THIS TEST WORK
         console.log("\nTesting swap with native currency\n");
         console.log("TODO: MAKE THIS TEST WORK");

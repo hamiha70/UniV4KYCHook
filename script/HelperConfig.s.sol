@@ -21,26 +21,24 @@ import {PoolKey} from "v4-core/types/PoolKey.sol";
 import {PoolId, PoolIdLibrary} from "v4-core/types/PoolId.sol";
 import {Hooks} from "v4-core/libraries/Hooks.sol";
 import {IHooks} from "v4-core/interfaces/IHooks.sol";
-import {BrevisRequest} from "lib/brevis-contracts/contracts/sdk/core/BrevisRequest.sol";
-import {BrevisProof} from "lib/brevis-contracts/contracts/sdk/core/BrevisProof.sol";
-import {ILogAutomation} from "@chainlink/contracts/src/v0.8/interfaces/ILogAutomation.sol";
-import {AutomationCompatible} from "@chainlink/contracts/src/v0.8/AutomationCompatible.sol";
+import {console} from "forge-std/console.sol";
 
 abstract contract CodeConstants {
     using RetailKYC for IdDocumentsBundle;
     // Chain IDs and related constants --------------------------------------------------------------------------------//
     // Sepolia
     uint256 public constant ETHEREUM_SEPOLIA_CHAIN_ID = 11155111;
-    uint256 public constant ETHEREUM_SEPOLIA_KYC_HOOK_DEPLOYMENT_BLOCK = 6699900  
+    uint256 public constant ETHEREUM_SEPOLIA_KYC_HOOK_DEPLOYMENT_BLOCK = 6699900;
     // Anvil
     uint256 public constant ANVIL_CHAIN_ID = 31337;
-    uint256 public constant ANVIL_cKYC_HOOK_DEPLOYMENT_BLOCK = 1000;
+    uint256 public constant ANVIL_KYC_HOOK_DEPLOYMENT_BLOCK = 1000;
     address public constant ANVIL_DEPLOYER_KEY = address(0x0);
     // KYCHook flags --------------------------------------------------------------------------------------------------//
     uint160 public constant KYC_HOOK_FLAGS = Hooks.BEFORE_ADD_LIQUIDITY_FLAG | Hooks.BEFORE_SWAP_FLAG
         | Hooks.BEFORE_INITIALIZE_FLAG | Hooks.AFTER_INITIALIZE_FLAG;
     uint160 public constant ANVIL_HOOK_OFFSET = 23484 * 2 ** 24;
     address public constant KYC_HOOK_ADDRESS_ANVIL = address(uint160(KYC_HOOK_FLAGS | ANVIL_HOOK_OFFSET));
+    // CHAINLINK ADDRESSES ------------------------------------------------------------------------------------------//
     // Swap Parameters -----------------------------------------------------------------------------------------------//
 
     // Pool initialization Parameters --------------------------------------------------------------------------------//
@@ -72,12 +70,8 @@ abstract contract CodeConstants {
         MailedBills: 0
     });
     // Initial Consumer KYC Standard ------------------------------------------------------------------------------//
-    RetailKYCInformation public INITIAL_CONSUMER_KYC_STANDARD = RetailKYCInformation(
-        ROGUE_USER_INITIAL_DOCUMENTS_BUNDLE.getRetailKYCInformationFromIdDocuments()
-    );
-    RetailKYCInformation public STRICTER_CONSUMER_KYC_STANDARD = RetailKYCInformation(
-        SWAPPER_INITIAL_DOCUMENTS_BUNDLE.getRetailKYCInformationFromIdDocuments()
-    );
+    RetailKYCInformation public INITIAL_CONSUMER_KYC_STANDARD = ROGUE_USER_INITIAL_DOCUMENTS_BUNDLE.getRetailKYCInformationFromIdDocuments();
+    RetailKYCInformation public STRICTER_CONSUMER_KYC_STANDARD = SWAPPER_INITIAL_DOCUMENTS_BUNDLE.getRetailKYCInformationFromIdDocuments();
 }
 
 // Contains the mapping of the funded addresses on the different chains to roles in the KYC excosystem
@@ -255,6 +249,7 @@ contract HelperConfig is Script, CodeConstants, SepoliaEthereumConstants, AnvilC
         /* BlacklistPolicy usdcBlacklistPolicy; */
         KYCTokenPolicy kycTokenPolicy;
         KYCToken kycToken;
+        RetailKYCInformation initialRetailKYCInformation;
     }
 
     struct ERC20Contracts {
@@ -329,29 +324,37 @@ contract HelperConfig is Script, CodeConstants, SepoliaEthereumConstants, AnvilC
     // Constructor --------------------------------------------------------- //
     constructor() {
         if (block.chainid == ETHEREUM_SEPOLIA_CHAIN_ID) {
-            if (block.number < KYC_HOOK_DEPLOYMENT_BLOCK) {
-                s_networkConfigs[ETHEREUM_SEPOLIA_CHAIN_ID] = getCLeanSepolianEthereumNetworkConfig();
+            if (block.number < ETHEREUM_SEPOLIA_KYC_HOOK_DEPLOYMENT_BLOCK) {
+                s_networkConfigs[ETHEREUM_SEPOLIA_CHAIN_ID] = getCleanSepoliaEthereumNetworkConfig();
+                s_localNetworkConfig = s_networkConfigs[ETHEREUM_SEPOLIA_CHAIN_ID];
             } else {
                 s_networkConfigs[ETHEREUM_SEPOLIA_CHAIN_ID] = getDeployedSepoliaEthereumNetworkConfig();
+                s_localNetworkConfig = s_networkConfigs[ETHEREUM_SEPOLIA_CHAIN_ID];
             }
         } else if (block.chainid == ANVIL_CHAIN_ID) {
-            if (block.number < KYC_HOOK_DEPLOYMENT_BLOCK) {
+            if (block.number < ANVIL_KYC_HOOK_DEPLOYMENT_BLOCK) {
                 s_networkConfigs[ANVIL_CHAIN_ID] = getCleanAnvilNetworkConfig();
+                s_localNetworkConfig = s_networkConfigs[ANVIL_CHAIN_ID];
             } else {
                 s_networkConfigs[ANVIL_CHAIN_ID] = getDeployedAnvilNetworkConfig();
+                s_localNetworkConfig = s_networkConfigs[ANVIL_CHAIN_ID];
             }
         }
     }
 
-    function getCleanSepoliaEthereumNetworkConfig() public view returns (NetworkConfig) {
+    // Getters for the network config ---------------------------------------- //
+    function getLocalNetworkConfig() public view returns (NetworkConfig memory) {
+        return s_localNetworkConfig;
+    }
+
+    // Helpers to assemble the network config for the different chains and histories ----- //
+
+    function getCleanSepoliaEthereumNetworkConfig() public view returns (NetworkConfig memory config) {
         console.log("Getting clean Sepolia Ethereum Network Config");
-        NetworkConfig config = new NetworkConfig();
         // Brevis
         config.brevisContracts.brevisRequest = BREVIS_REQUEST_SEPOLIA;
         config.brevisContracts.brevisProof = BREVIS_PROOF_SEPOLIA;
         // Chainlink
-        config.chainlinkContracts.chainlinkRequest = CHAINLINK_REQUEST_SEPOLIA;
-        config.chainlinkContracts.chainlinkProof = CHAINLINK_PROOF_SEPOLIA;
         // ActiveOwners
         config.activeOwners.poolKYCOwner = payable(vm.envAddress("SEPOLIA_ACCOUNT_ADDRESS_2"));
         config.activeOwners.poolNonKYCOwner = payable(vm.envAddress("SEPOLIA_ACCOUNT_ADDRESS_2"));
@@ -370,15 +373,75 @@ contract HelperConfig is Script, CodeConstants, SepoliaEthereumConstants, AnvilC
         return config;
     }
 
-    function getDeployedSepoliaEthereumNetworkConfig() public view returns (NetworkConfig) {
+    function getDeployedSepoliaEthereumNetworkConfig() public view returns (NetworkConfig memory) {
+        console.log("Getting deployed Sepolia Ethereum Network Config");
         // Incremental to the clean config
-        NetworkConfig config = getCleanSepoliaEthereumNetworkConfig();
+        NetworkConfig memory config = getCleanSepoliaEthereumNetworkConfig();
 
+        // Uniswap V4
+        config.uniswapV4Contracts.poolManager = IPoolManager(POOL_MANAGER_SEPOLIA);
+        // Hooks
+        config.hookContracts.kycHook = KYCHook(KYC_HOOK_SEPOLIA);
+        // Routers
+        config.routerContracts.kycRouter = KYCRouter(KYC_ROUTER_SEPOLIA);
+        config.routerContracts.maliciousRouter = KYCRouter(MALICIOUS_ROUTER_SEPOLIA);
+        config.routerContracts.carelessRouter = KYCRouter(CARELESS_ROUTER_SEPOLIA);
+        config.routerContracts.swapRouter = PoolSwapTest(SWAP_ROUTER_SEPOLIA);
+        config.routerContracts.modifyLiquidityRouter = PoolModifyLiquidityTest(MODIFY_LIQUIDITY_ROUTER_SEPOLIA);
+        // Policy
+        config.policyContracts.kycTokenPolicy = KYCTokenPolicy(TOKEN_POLICY_SEPOLIA);
+        config.policyContracts.kycToken = KYCToken(TOKEN_SEPOLIA);
+        config.policyContracts.initialRetailKYCInformation = RetailKYC.getRetailKYCInformationFromIdDocuments(ROGUE_USER_INITIAL_DOCUMENTS_BUNDLE);
+        // ERC20
+        config.erc20Contracts.pool_token0 = Currency.wrap(POOL_TOKEN_0_SEPOLIA);
+        config.erc20Contracts.pool_token1 = Currency.wrap(POOL_TOKEN_1_SEPOLIA);
+        config.erc20Contracts.link_token = MockERC20(LINK_TOKEN_SEPOLIA);
+        config.erc20Contracts.usdc_token = MockERC20(USDC_TOKEN_SEPOLIA);
+        // Pool
+        config.kycPool.key = PoolKey(Currency.wrap(POOL_TOKEN_0_SEPOLIA), Currency.wrap(POOL_TOKEN_1_SEPOLIA), 0,0, IHooks(KYC_HOOK_SEPOLIA));
+        config.kycPool.hookData = bytes("");
+        config.kycPool.sqrtPriceX96 = 0;
+        config.nonKycPool.key = PoolKey(Currency.wrap(POOL_TOKEN_0_SEPOLIA), Currency.wrap(POOL_TOKEN_1_SEPOLIA), 0, 0, IHooks(address(0)));
+        config.nonKycPool.hookData = bytes("");
+        config.nonKycPool.sqrtPriceX96 = 0;
+        // Deployer
+        config.deployer = CREATE2_DEPLOYER_SEPOLIA;
+        return config;
+    }
+
+    function getCleanAnvilNetworkConfig() public view returns (NetworkConfig memory config) {
+        console.log("Getting clean Anvil Network Config");
+        // Brevis
+        // TODO: Replace with Mock deployments
+        config.brevisContracts.brevisRequest = BREVIS_REQUEST_ANVIL;
+        config.brevisContracts.brevisProof = BREVIS_PROOF_ANVIL;
+        // Chainlink
+        // ActiveOwners
+        config.activeOwners.poolKYCOwner = payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_2"));
+        config.activeOwners.poolNonKYCOwner = payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_2"));
+        config.activeOwners.tokenPolicyOwner = payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_7"));
+        config.activeOwners.usdcBlacklistPolicyOwner = payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_7"));
+        config.activeOwners.kycHookOwner = payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_3"));
+        config.activeOwners.kycHook_byWhitelistOwner = payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_2"));
+        config.activeOwners.kycRouterOwner = payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_2"));
+        config.activeOwners.maliciousRouterOwner = payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_2"));
+        config.activeOwners.carelessRouterOwner = payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_2"));
+        // Users
+        config.users.swapper = payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_4"));
+        config.users.liquidityProvider = payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_8"));
+        config.users.rogueUser = payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_5")); 
+        
+        return config;
+    }
+
+    function getDeployedAnvilNetworkConfig() public view returns (NetworkConfig memory config) {
+        console.log("Getting deployed Anvil Network Config");
+        config = getCleanAnvilNetworkConfig();
         // Uniswap V4
         config.uniswapV4Contracts.poolManager = IPoolManager(address(0x0));
         // Hooks
         config.hookContracts.kycHook = KYCHook(address(0x0));
-        // Routers
+        // Routers  
         config.routerContracts.kycRouter = KYCRouter(address(0x0));
         config.routerContracts.maliciousRouter = KYCRouter(address(0x0));
         config.routerContracts.carelessRouter = KYCRouter(address(0x0));
@@ -387,6 +450,7 @@ contract HelperConfig is Script, CodeConstants, SepoliaEthereumConstants, AnvilC
         // Policy
         config.policyContracts.kycTokenPolicy = KYCTokenPolicy(address(0x0));
         config.policyContracts.kycToken = KYCToken(address(0x0));
+        config.policyContracts.initialRetailKYCInformation = RetailKYC.getRetailKYCInformationFromIdDocuments(ROGUE_USER_INITIAL_DOCUMENTS_BUNDLE);
         // ERC20
         config.erc20Contracts.pool_token0 = Currency.wrap(address(0x0));
         config.erc20Contracts.pool_token1 = Currency.wrap(address(0x0));
@@ -400,65 +464,8 @@ contract HelperConfig is Script, CodeConstants, SepoliaEthereumConstants, AnvilC
         config.nonKycPool.hookData = bytes("");
         config.nonKycPool.sqrtPriceX96 = 0;
         // Deployer
-        config.deployer = CREATE2_DEPLOYER_SEPOLIA;
+        config.deployer = CREATE2_DEPLOYER_ANVIL;
         return config;
     }
-
-    function getCleanAnvilNetworkConfig() public view returns (NetworkConfig) {
-        s_networkConfigs[ANVIL_CHAIN_ID] = NetworkConfig({
-            hookContracts: HookContracts({
-                /* kycHook_byWhitelist: KYCHook_byWhitelist(address(0x0)), */
-                kycHook: KYCHook(address(0x0))
-            }),
-            routerContracts: RouterContracts({
-                kycRouter: KYCRouter(address(0x0)),
-                maliciousRouter: KYCRouter(address(0x0)),
-                carelessRouter: KYCRouter(address(0x0)),
-                swapRouter: PoolSwapTest(address(0x0)),
-                modifyLiquidityRouter: PoolModifyLiquidityTest(address(0x0))
-            }),
-            policyContracts: PolicyContracts({
-                /* usdcBlacklistPolicy: BlacklistPolicy(address(0x0)), */
-                kycTokenPolicy: KYCTokenPolicy(address(0x0)),
-                kycToken: KYCToken(address(0x0))
-            }),
-            erc20Contracts: ERC20Contracts({
-                pool_token0: Currency.wrap(address(0x0)),
-                pool_token1: Currency.wrap(address(0x0)),
-                link_token: MockERC20(address(0x0)),
-                usdc_token: MockERC20(address(0x0))
-            }),
-            brevisContracts: BrevisContracts({brevisRequest: BREVIS_REQUEST_ANVIL, brevisProof: BREVIS_PROOF_ANVIL}),
-            uniswapV4Contracts: UniswapV4Contracts({poolManager: IPoolManager(address(0x0))}),
-            chainlinkContracts: ChainlinkContracts({chainlinkRequest: address(0x0), chainlinkProof: address(0x0)}),
-            activeOwners: ActiveOwners({
-                poolKYCOwner: payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_2")),
-                poolNonKYCOwner: payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_2")),
-                tokenPolicyOwner: payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_7")),
-                usdcBlacklistPolicyOwner: payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_7")),
-                kycHookOwner: payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_3")),
-                kycHook_byWhitelistOwner: payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_2")),
-                kycRouterOwner: payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_2")),
-                maliciousRouterOwner: payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_2")),
-                carelessRouterOwner: payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_2"))
-            }),
-            users: Users({
-                swapper: payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_4")),
-                liquidityProvider: payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_8")),
-                rogueUser: payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_5"))
-            
-            }),
-            kycPool: Pool({
-                key: PoolKey(Currency.wrap(address(0x0)), Currency.wrap(address(0x0)), 0,0, IHooks(address(0))),
-                hookData: bytes(""),
-                sqrtPriceX96: 0
-            }),
-            nonKycPool: Pool({
-                key: PoolKey(Currency.wrap(address(0x0)), Currency.wrap(address(0x0)), 0, 0, IHooks(address(0))),
-                hookData: bytes(""),
-                sqrtPriceX96: 0
-            }),
-            deployer: CREATE2_DEPLOYER_ANVIL
-        });
-    }
 }
+

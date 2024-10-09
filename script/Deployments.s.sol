@@ -50,7 +50,7 @@ contract DeployContracts is Script, CodeConstants, AnvilConstants, SepoliaEthere
 
         console.log("Getting network config for chainid before deployment:", block.chainid);
         HelperConfig helperConfig = new HelperConfig();
-        updatedNetworkConfig = helperConfig.getNetworkConfig(block.chainid);
+        updatedNetworkConfig = helperConfig.getLocalNetworkConfig();
         
         // Print the initial network configuration
         printNetworkConfig(updatedNetworkConfig);
@@ -147,21 +147,21 @@ contract DeployContracts is Script, CodeConstants, AnvilConstants, SepoliaEthere
             console.log("ModifyLiquidityRouter deployed at", address(modifyLiquidityRouter));
         }
         // Deploy policies
-        if (address(updatedNetworkConfig.policyContracts.kycTokenPolicy) == address(0)) {
-            vm.startBroadcast(vm.envUint(envPrivKey[block.chainid]["tokenPolicyOwner"]));
-            updatedNetworkConfig.policyContracts.kycTokenPolicy = new KYCTokenPolicy({
-                _policyStandard: updatedNetworkConfig.policyContracts.consumerKYCStandard,
-                _kycTokenAddress: address(updatedNetworkConfig.policyContracts.kycToken)
-            });
-            vm.stopBroadcast();
-            console.log("KYCTokenPolicy deployed at", address(updatedNetworkConfig.policyContracts.kycTokenPolicy));
-        }
         if (address(updatedNetworkConfig.policyContracts.kycToken) == address(0)) {
             vm.startBroadcast(vm.envUint(envPrivKey[block.chainid]["tokenOwner"]));
             KYCToken kycToken = new KYCToken();
             vm.stopBroadcast();
             updatedNetworkConfig.policyContracts.kycToken = kycToken;
             console.log("KYCToken deployed at", address(kycToken));
+        }
+        if (address(updatedNetworkConfig.policyContracts.kycTokenPolicy) == address(0)) {
+            vm.startBroadcast(vm.envUint(envPrivKey[block.chainid]["tokenPolicyOwner"]));
+            updatedNetworkConfig.policyContracts.kycTokenPolicy = new KYCTokenPolicy({
+                _policyStandard: updatedNetworkConfig.policyContracts.initialRetailKYCInformation,
+                _kycTokenAddress: address(updatedNetworkConfig.policyContracts.kycToken)
+            });
+            vm.stopBroadcast();
+            console.log("KYCTokenPolicy deployed at", address(updatedNetworkConfig.policyContracts.kycTokenPolicy));
         }
         //Deploy KYCHooks
         if (address(updatedNetworkConfig.hookContracts.kycHook) == address(0)) {
