@@ -23,6 +23,8 @@ import {Hooks} from "v4-core/libraries/Hooks.sol";
 import {IHooks} from "v4-core/interfaces/IHooks.sol";
 import {console} from "forge-std/console.sol";
 
+import "@openzeppelin/contracts/utils/Strings.sol";
+
 abstract contract CodeConstants {
     using RetailKYC for IdDocumentsBundle;
     // Chain IDs and related constants --------------------------------------------------------------------------------//
@@ -225,7 +227,7 @@ abstract contract SepoliaEthereumConstants {
 
 
 
-contract HelperConfig is Script, CodeConstants, SepoliaEthereumConstants, AnvilConstants {
+contract HelperConfig is Script, CodeConstants, SepoliaEthereumConstants, AnvilConstants, EnvLookups {
     using PoolIdLibrary for PoolKey;
     // Errors ------------------------------------------------------------ //
     error HelperConfig__UnkownNetwork();
@@ -280,19 +282,27 @@ contract HelperConfig is Script, CodeConstants, SepoliaEthereumConstants, AnvilC
     }
 
     struct ActiveOwners {
+        // Initial Deployer
+        address payable initialDeployer;
         // Pool
         address payable poolKYCOwner;
         address payable poolNonKYCOwner;
         // Policies
         address payable tokenPolicyOwner;
+        address payable tokenOwner;
         address payable usdcBlacklistPolicyOwner;
         // Hooks
         address payable kycHookOwner;
         address payable kycHook_byWhitelistOwner;
+        // Brevis
+        address payable brevisRequestOwner;
+        address payable brevisProofOwner;
         // KYCRouters
         address payable kycRouterOwner;
         address payable maliciousRouterOwner;
         address payable carelessRouterOwner;
+        address payable swapRouterOwner;
+        address payable modifyLiquidityRouterOwner;
     }
 
     struct Users {
@@ -324,7 +334,7 @@ contract HelperConfig is Script, CodeConstants, SepoliaEthereumConstants, AnvilC
     // Constructor --------------------------------------------------------- //
     constructor() {
         if (block.chainid == ETHEREUM_SEPOLIA_CHAIN_ID) {
-            if (block.number < ETHEREUM_SEPOLIA_KYC_HOOK_DEPLOYMENT_BLOCK) {
+            if (block.number <= ETHEREUM_SEPOLIA_KYC_HOOK_DEPLOYMENT_BLOCK) {
                 s_networkConfigs[ETHEREUM_SEPOLIA_CHAIN_ID] = getCleanSepoliaEthereumNetworkConfig();
                 s_localNetworkConfig = s_networkConfigs[ETHEREUM_SEPOLIA_CHAIN_ID];
             } else {
@@ -332,7 +342,7 @@ contract HelperConfig is Script, CodeConstants, SepoliaEthereumConstants, AnvilC
                 s_localNetworkConfig = s_networkConfigs[ETHEREUM_SEPOLIA_CHAIN_ID];
             }
         } else if (block.chainid == ANVIL_CHAIN_ID) {
-            if (block.number < ANVIL_KYC_HOOK_DEPLOYMENT_BLOCK) {
+            if (block.number <= ANVIL_KYC_HOOK_DEPLOYMENT_BLOCK) {
                 s_networkConfigs[ANVIL_CHAIN_ID] = getCleanAnvilNetworkConfig();
                 s_localNetworkConfig = s_networkConfigs[ANVIL_CHAIN_ID];
             } else {
@@ -356,19 +366,25 @@ contract HelperConfig is Script, CodeConstants, SepoliaEthereumConstants, AnvilC
         config.brevisContracts.brevisProof = BREVIS_PROOF_SEPOLIA;
         // Chainlink
         // ActiveOwners
-        config.activeOwners.poolKYCOwner = payable(vm.envAddress("SEPOLIA_ACCOUNT_ADDRESS_2"));
-        config.activeOwners.poolNonKYCOwner = payable(vm.envAddress("SEPOLIA_ACCOUNT_ADDRESS_2"));
-        config.activeOwners.tokenPolicyOwner = payable(vm.envAddress("SEPOLIA_ACCOUNT_ADDRESS_7"));
-        config.activeOwners.usdcBlacklistPolicyOwner = payable(vm.envAddress("SEPOLIA_ACCOUNT_ADDRESS_7"));
-        config.activeOwners.kycHookOwner = payable(vm.envAddress("SEPOLIA_ACCOUNT_ADDRESS_3"));
-        config.activeOwners.kycHook_byWhitelistOwner = payable(vm.envAddress("SEPOLIA_ACCOUNT_ADDRESS_2"));
-        config.activeOwners.kycRouterOwner = payable(vm.envAddress("SEPOLIA_ACCOUNT_ADDRESS_2"));
-        config.activeOwners.maliciousRouterOwner = payable(vm.envAddress("SEPOLIA_ACCOUNT_ADDRESS_2"));
-        config.activeOwners.carelessRouterOwner = payable(vm.envAddress("SEPOLIA_ACCOUNT_ADDRESS_2"));
+        config.activeOwners.initialDeployer = payable(vm.envAddress(envAddr[ETHEREUM_SEPOLIA_CHAIN_ID]["initialDeployer"]));
+        config.activeOwners.poolKYCOwner = payable(vm.envAddress(envAddr[ETHEREUM_SEPOLIA_CHAIN_ID]["poolKYCOwner"]));
+        config.activeOwners.poolNonKYCOwner = payable(vm.envAddress(envAddr[ETHEREUM_SEPOLIA_CHAIN_ID]["poolNonKYCOwner"]));
+        config.activeOwners.tokenPolicyOwner = payable(vm.envAddress(envAddr[ETHEREUM_SEPOLIA_CHAIN_ID]["tokenPolicyOwner"]));
+        config.activeOwners.tokenOwner = payable(vm.envAddress(envAddr[ETHEREUM_SEPOLIA_CHAIN_ID]["tokenOwner"]));
+        config.activeOwners.usdcBlacklistPolicyOwner = payable(vm.envAddress(envAddr[ETHEREUM_SEPOLIA_CHAIN_ID]["usdcBlacklistPolicyOwner"]));
+        config.activeOwners.kycHookOwner = payable(vm.envAddress(envAddr[ETHEREUM_SEPOLIA_CHAIN_ID]["kycHookOwner"]));
+        config.activeOwners.kycHook_byWhitelistOwner = payable(vm.envAddress(envAddr[ETHEREUM_SEPOLIA_CHAIN_ID]["kycHook_byWhitelistOwner"]));
+        config.activeOwners.kycRouterOwner = payable(vm.envAddress(envAddr[ETHEREUM_SEPOLIA_CHAIN_ID]["kycRouterOwner"]));
+        config.activeOwners.maliciousRouterOwner = payable(vm.envAddress(envAddr[ETHEREUM_SEPOLIA_CHAIN_ID]["maliciousRouterOwner"]));
+        config.activeOwners.carelessRouterOwner = payable(vm.envAddress(envAddr[ETHEREUM_SEPOLIA_CHAIN_ID]["carelessRouterOwner"]));
+        config.activeOwners.swapRouterOwner = payable(vm.envAddress(envAddr[ETHEREUM_SEPOLIA_CHAIN_ID]["swapRouterOwner"]));
+        config.activeOwners.modifyLiquidityRouterOwner = payable(vm.envAddress(envAddr[ETHEREUM_SEPOLIA_CHAIN_ID]["modifyLiquidityRouterOwner"]));
+        config.activeOwners.brevisRequestOwner = payable(vm.envAddress(envAddr[ETHEREUM_SEPOLIA_CHAIN_ID]["brevisRequestOwner"]));
+        config.activeOwners.brevisProofOwner = payable(vm.envAddress(envAddr[ETHEREUM_SEPOLIA_CHAIN_ID]["brevisProofOwner"]));
         // Users
-        config.users.swapper = payable(vm.envAddress("SEPOLIA_ACCOUNT_ADDRESS_4"));
-        config.users.liquidityProvider = payable(vm.envAddress("SEPOLIA_ACCOUNT_ADDRESS_8"));
-        config.users.rogueUser = payable(vm.envAddress("SEPOLIA_ACCOUNT_ADDRESS_5"));
+        config.users.swapper = payable(vm.envAddress(envAddr[ETHEREUM_SEPOLIA_CHAIN_ID]["swapper"]));
+        config.users.liquidityProvider = payable(vm.envAddress(envAddr[ETHEREUM_SEPOLIA_CHAIN_ID]["liquidityProvider"]));
+        config.users.rogueUser = payable(vm.envAddress(envAddr[ETHEREUM_SEPOLIA_CHAIN_ID]["rogueUser"]));
 
         return config;
     }
@@ -398,10 +414,10 @@ contract HelperConfig is Script, CodeConstants, SepoliaEthereumConstants, AnvilC
         config.erc20Contracts.link_token = MockERC20(LINK_TOKEN_SEPOLIA);
         config.erc20Contracts.usdc_token = MockERC20(USDC_TOKEN_SEPOLIA);
         // Pool
-        config.kycPool.key = PoolKey(Currency.wrap(POOL_TOKEN_0_SEPOLIA), Currency.wrap(POOL_TOKEN_1_SEPOLIA), 0,0, IHooks(KYC_HOOK_SEPOLIA));
+        config.kycPool.key = PoolKey(Currency.wrap(POOL_TOKEN_0_SEPOLIA), Currency.wrap(POOL_TOKEN_1_SEPOLIA), 3000, 60, IHooks(KYC_HOOK_SEPOLIA));
         config.kycPool.hookData = bytes("");
         config.kycPool.sqrtPriceX96 = 0;
-        config.nonKycPool.key = PoolKey(Currency.wrap(POOL_TOKEN_0_SEPOLIA), Currency.wrap(POOL_TOKEN_1_SEPOLIA), 0, 0, IHooks(address(0)));
+        config.nonKycPool.key = PoolKey(Currency.wrap(POOL_TOKEN_0_SEPOLIA), Currency.wrap(POOL_TOKEN_1_SEPOLIA), 3000, 60, IHooks(address(0)));
         config.nonKycPool.hookData = bytes("");
         config.nonKycPool.sqrtPriceX96 = 0;
         // Deployer
@@ -417,19 +433,25 @@ contract HelperConfig is Script, CodeConstants, SepoliaEthereumConstants, AnvilC
         config.brevisContracts.brevisProof = BREVIS_PROOF_ANVIL;
         // Chainlink
         // ActiveOwners
-        config.activeOwners.poolKYCOwner = payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_2"));
-        config.activeOwners.poolNonKYCOwner = payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_2"));
-        config.activeOwners.tokenPolicyOwner = payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_7"));
-        config.activeOwners.usdcBlacklistPolicyOwner = payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_7"));
-        config.activeOwners.kycHookOwner = payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_3"));
-        config.activeOwners.kycHook_byWhitelistOwner = payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_2"));
-        config.activeOwners.kycRouterOwner = payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_2"));
-        config.activeOwners.maliciousRouterOwner = payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_2"));
-        config.activeOwners.carelessRouterOwner = payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_2"));
+        config.activeOwners.initialDeployer = payable(vm.envAddress(envAddr[ANVIL_CHAIN_ID]["initialDeployer"]));
+        config.activeOwners.poolKYCOwner = payable(vm.envAddress(envAddr[ANVIL_CHAIN_ID]["poolKYCOwner"]));
+        config.activeOwners.poolNonKYCOwner = payable(vm.envAddress(envAddr[ANVIL_CHAIN_ID]["poolNonKYCOwner"]));
+        config.activeOwners.tokenPolicyOwner = payable(vm.envAddress(envAddr[ANVIL_CHAIN_ID]["tokenPolicyOwner"]));
+        config.activeOwners.tokenOwner = payable(vm.envAddress(envAddr[ANVIL_CHAIN_ID]["tokenOwner"]));
+        config.activeOwners.usdcBlacklistPolicyOwner = payable(vm.envAddress(envAddr[ANVIL_CHAIN_ID]["usdcBlacklistPolicyOwner"]));
+        config.activeOwners.kycHookOwner = payable(vm.envAddress(envAddr[ANVIL_CHAIN_ID]["kycHookOwner"]));
+        config.activeOwners.kycHook_byWhitelistOwner = payable(vm.envAddress(envAddr[ANVIL_CHAIN_ID]["kycHook_byWhitelistOwner"]));
+        config.activeOwners.kycRouterOwner = payable(vm.envAddress(envAddr[ANVIL_CHAIN_ID]["kycRouterOwner"]));
+        config.activeOwners.maliciousRouterOwner = payable(vm.envAddress(envAddr[ANVIL_CHAIN_ID]["maliciousRouterOwner"]));
+        config.activeOwners.carelessRouterOwner = payable(vm.envAddress(envAddr[ANVIL_CHAIN_ID]["carelessRouterOwner"]));
+        config.activeOwners.swapRouterOwner = payable(vm.envAddress(envAddr[ANVIL_CHAIN_ID]["swapRouterOwner"]));
+        config.activeOwners.modifyLiquidityRouterOwner = payable(vm.envAddress(envAddr[ANVIL_CHAIN_ID]["modifyLiquidityRouterOwner"]));
+        config.activeOwners.brevisRequestOwner = payable(vm.envAddress(envAddr[ANVIL_CHAIN_ID]["brevisRequestOwner"]));
+        config.activeOwners.brevisProofOwner = payable(vm.envAddress(envAddr[ANVIL_CHAIN_ID]["brevisProofOwner"]));
         // Users
-        config.users.swapper = payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_4"));
-        config.users.liquidityProvider = payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_8"));
-        config.users.rogueUser = payable(vm.envAddress("ANVIL_ACCOUNT_ADDRESS_5")); 
+        config.users.swapper = payable(vm.envAddress(envAddr[ANVIL_CHAIN_ID]["swapper"]));
+        config.users.liquidityProvider = payable(vm.envAddress(envAddr[ANVIL_CHAIN_ID]["liquidityProvider"]));
+        config.users.rogueUser = payable(vm.envAddress(envAddr[ANVIL_CHAIN_ID]["rogueUser"]));
         
         return config;
     }
@@ -467,5 +489,161 @@ contract HelperConfig is Script, CodeConstants, SepoliaEthereumConstants, AnvilC
         config.deployer = CREATE2_DEPLOYER_ANVIL;
         return config;
     }
-}
 
+    function printNetworkConfig(HelperConfig.NetworkConfig memory config) public view {
+        console.log("\nNetwork Configuration for chainid:", block.chainid);
+        console.log("------------------------------------");
+        console.log("ERC20 Contracts:");
+        console.log("  LINK Token:", address(config.erc20Contracts.link_token));
+        console.log("  USDC Token:", address(config.erc20Contracts.usdc_token));
+        console.log("  Pool Token 0:", Currency.unwrap(config.erc20Contracts.pool_token0));
+        console.log("  Pool Token 1:", Currency.unwrap(config.erc20Contracts.pool_token1));
+        
+        console.log("\nUniswap V4 Contracts:");
+        console.log("  Pool Manager:", address(config.uniswapV4Contracts.poolManager));
+        
+        console.log("\nRouter Contracts:");
+        console.log("  KYC Router:", address(config.routerContracts.kycRouter));
+        console.log("  Malicious Router:", address(config.routerContracts.maliciousRouter));
+        console.log("  Careless Router:", address(config.routerContracts.carelessRouter));
+        console.log("  Swap Router:", address(config.routerContracts.swapRouter));
+        console.log("  Modify Liquidity Router:", address(config.routerContracts.modifyLiquidityRouter));
+
+        console.log("\nPolicy Contracts:");
+        console.log("  KYC Token Policy:", address(config.policyContracts.kycTokenPolicy));
+        console.log("  KYC Token:", address(config.policyContracts.kycToken));
+        
+        console.log("\nHook Contracts:");
+        console.log("  KYC Hook:", address(config.hookContracts.kycHook));
+        
+        console.log("\nBrevis Contracts:");
+        console.log("  Brevis Request:", address(config.brevisContracts.brevisRequest));
+        console.log("  Brevis Proof:", address(config.brevisContracts.brevisProof));
+
+        console.log("\nChainlink Contracts:");
+        console.log("  Chainlink Request:", address(config.chainlinkContracts.chainlinkRequest));
+        console.log("  Chainlink Proof:", address(config.chainlinkContracts.chainlinkProof));
+
+        console.log("\nPools:");
+        console.log("  KYC Pool PoolId:");
+        printPoolKey(config.kycPool.key);
+        console.log("  Non KYC Pool PoolId:");
+        printPoolKey(config.nonKycPool.key);
+
+        console.log("\nActive Owners:");
+        console.log("  Pool KYC Owner:", config.activeOwners.poolKYCOwner);
+        console.log("  Pool Non KYC Owner:", config.activeOwners.poolNonKYCOwner);
+        console.log("  Token Policy Owner:", config.activeOwners.tokenPolicyOwner);
+        console.log("  USDC Blacklist Policy Owner:", config.activeOwners.usdcBlacklistPolicyOwner);
+        console.log("  KYC Hook Owner:", config.activeOwners.kycHookOwner);
+        console.log("  KYC Hook by Whitelist Owner:", config.activeOwners.kycHook_byWhitelistOwner);
+        console.log("  KYC Router Owner:", config.activeOwners.kycRouterOwner);
+        console.log("  Malicious Router Owner:", config.activeOwners.maliciousRouterOwner);
+        console.log("  Careless Router Owner:", config.activeOwners.carelessRouterOwner);
+
+        console.log("\nUsers:");
+        console.log("  Swapper:", config.users.swapper);
+        console.log("  Liquidity Provider:", config.users.liquidityProvider);
+        console.log("  Rogue User:", config.users.rogueUser);
+        console.log("------------------------------------");
+    }
+
+    function printETHBalances(HelperConfig.NetworkConfig memory config) public view {
+        address[] memory addresses = new address[](18);  // Adjust size as needed
+        string[] memory labels = new string[](18); //
+
+        addresses[0] = config.activeOwners.initialDeployer;
+        labels[0] = "InitialDeployer";
+        addresses[1] = config.activeOwners.poolKYCOwner;
+        labels[1] = "PoolKYCOwner";
+        addresses[2] = config.activeOwners.poolNonKYCOwner;
+        labels[2] = "PoolNonKYCOwner";
+        addresses[3] = config.activeOwners.tokenPolicyOwner;
+        labels[3] = "TokenPolicyOwner";
+        addresses[4] = config.activeOwners.tokenOwner;  
+        labels[4] = "TokenOwner";
+        addresses[5] = config.activeOwners.usdcBlacklistPolicyOwner;
+        labels[5] = "USDCBlacklistPolicyOwner";
+        addresses[6] = config.activeOwners.kycHookOwner;
+        labels[6] = "KYCHookOwner";
+        addresses[7] = config.activeOwners.kycHook_byWhitelistOwner;
+        labels[7] = "KYCHook_byWhitelistOwner";
+        addresses[8] = config.activeOwners.kycRouterOwner;
+        labels[8] = "KYCRouterOwner";
+        addresses[9] = config.activeOwners.maliciousRouterOwner;
+        labels[9] = "MaliciousRouterOwner";
+        addresses[10] = config.activeOwners.carelessRouterOwner;
+        labels[10] = "CarelessRouterOwner";
+        addresses[11] = config.activeOwners.swapRouterOwner;
+        labels[11] = "SwapRouterOwner";
+        addresses[12] = config.activeOwners.modifyLiquidityRouterOwner;
+        labels[12] = "ModifyLiquidityRouterOwner";
+        addresses[13] = config.activeOwners.brevisRequestOwner;
+        labels[13] = "BrevisRequestOwner";
+        addresses[14] = config.activeOwners.brevisProofOwner;
+        labels[14] = "BrevisProofOwner";
+        addresses[15] = config.users.swapper;
+        labels[15] = "Swapper";
+        addresses[16] = config.users.liquidityProvider;
+        labels[16] = "LiquidityProvider";
+        addresses[17] = config.users.rogueUser;
+        labels[17] = "RogueUser";
+
+        console.log("ETH Balances:");
+        for (uint i = 0; i < addresses.length; i++) {
+            uint256 balanceWei = addresses[i].balance;
+            uint256 balanceEther = balanceWei / 1e18;
+            uint256 decimalPart = (balanceWei % 1e18) / 1e14;
+            
+            string memory balanceStr = string(abi.encodePacked(
+                Strings.toString(balanceEther),
+                ".",
+                leftPadZeros(Strings.toString(decimalPart), 4)
+            ));
+            
+            uint256 spaces = 20 - bytes(balanceStr).length;
+            string memory paddedBalance = string(abi.encodePacked(
+                new string(spaces),
+                balanceStr
+            ));
+            
+            console.log(string(abi.encodePacked(
+                paddedBalance,
+                " ETH  ",
+                Strings.toHexString(uint160(addresses[i]), 20), // Convert address to hex string
+                " ",
+                labels[i]
+            )));
+        }
+        console.log("\n");
+    }
+
+    function leftPadZeros(string memory s, uint256 targetLength) private pure returns (string memory) {
+        bytes memory bStr = bytes(s);
+        if (bStr.length >= targetLength) return s;
+        
+        bytes memory bZero = bytes("0");
+        bytes memory result = new bytes(targetLength);
+        uint j = targetLength;
+        uint i = bStr.length;
+        while (j > 0) {
+            j--;
+            if (i > 0) {
+                i--;
+                result[j] = bStr[i];
+            } else {
+                result[j] = bZero[0];
+            }
+        }
+        return string(result);
+    }
+    
+    function printPoolKey(PoolKey memory key) internal pure{
+        console.log("PoolKey:");
+        console.log("  Token0:", Currency.unwrap(key.currency0));
+        console.log("  Token1:", Currency.unwrap(key.currency1));
+        console.log("  Fee:", key.fee);
+        console.log("  TickSpacing:", key.tickSpacing);
+        console.log("  Hooks:", address(key.hooks));
+    }
+}
