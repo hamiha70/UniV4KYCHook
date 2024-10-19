@@ -22,16 +22,15 @@ remove :; rm -rf .gitmodules && rm -rf .git/modules/* && rm -rf lib && touch .gi
 
 install-cyfrin-foundry-devops :; forge install git@github.com:Cyfrin/foundry-devops --no-commit
 install-chainlink-brownie-contracts :; forge install git@github.com:smartcontractkit/chainlink-brownie-contracts --no-commit
-install-brevis-contracts :; forge install git@github.com:brevis-network/brevis-contracts --no-commit
+# install-brevis-contracts :; forge install git@github.com:brevis-network/brevis-contracts --no-commit
 install-uniV4-periphery :; forge install git@github.com:Uniswap/v4-periphery --no-commit
 # Base directory already includes uniswap v4 periphery and cyfrin-foundry-devops
-install :; make install-chainlink-brownie-contracts && make install-brevis-contracts
+install :; make install-chainlink-brownie-contracts
 
 # Update Dependencies
 update:; forge update
 
 build:; forge build
-
 
 snapshot :; forge snapshot
 
@@ -65,13 +64,13 @@ deploy-fund-approve:
 
 # Tests
 test-sepolia-fork-clean:
-	@forge test --fork-url $(ETHEREUM_SEPOLIA_RPC_URL) --fork-block-number $(SEPOLIA_CLEAN_BLOCK) $(if $(TEST_NAME),--match-test $(TEST_NAME) -vvvv,)
+	@FORKED_TEST=true forge test --via-ir --fork-url $(ETHEREUM_SEPOLIA_RPC_URL) --fork-block-number $(SEPOLIA_CLEAN_BLOCK) $(if $(TEST_NAME),--match-test $(TEST_NAME) -vvvv,)
 test-sepolia-fork-current:
-	@forge test --fork-url $(ETHEREUM_SEPOLIA_RPC_URL) $(if $(TEST_NAME),--match-test $(TEST_NAME) -vvvv,)
+	@FORKED_TEST=true forge test --via-ir --fork-url $(ETHEREUM_SEPOLIA_RPC_URL) $(if $(TEST_NAME),--match-test $(TEST_NAME) -vvvv,)
 test-anvil:
-	@forge test --fork-url http://localhost:8545 $(if $(TEST_NAME),--match-test $(TEST_NAME) -vvvv,)
+	@FORKED_TEST=true forge test --via-ir --fork-url http://localhost:8545 $(if $(TEST_NAME),--match-test $(TEST_NAME) -vvvv,)
 test:
-	@forge test $(if $(TEST_NAME),--match-test $(TEST_NAME) -vvvv,)
+	@FORKED_TEST=false forge test --via-ir $(if $(TEST_NAME),--match-test $(TEST_NAME) -vvvv,)
 
 
 # Interactions with the deployed contracts

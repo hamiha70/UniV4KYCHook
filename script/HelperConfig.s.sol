@@ -385,6 +385,12 @@ contract HelperConfig is Script, CodeConstants, SepoliaEthereumConstants, AnvilC
         config.users.swapper = payable(vm.envAddress(envAddr[ETHEREUM_SEPOLIA_CHAIN_ID]["swapper"]));
         config.users.liquidityProvider = payable(vm.envAddress(envAddr[ETHEREUM_SEPOLIA_CHAIN_ID]["liquidityProvider"]));
         config.users.rogueUser = payable(vm.envAddress(envAddr[ETHEREUM_SEPOLIA_CHAIN_ID]["rogueUser"]));
+        // Already deployed ERC20
+        config.erc20Contracts.link_token = MockERC20(LINK_TOKEN_SEPOLIA);
+        config.erc20Contracts.usdc_token = MockERC20(USDC_TOKEN_SEPOLIA);
+        // Brevis
+        config.brevisContracts.brevisRequest = BREVIS_REQUEST_SEPOLIA;
+        config.brevisContracts.brevisProof = BREVIS_PROOF_SEPOLIA;
 
         return config;
     }
@@ -492,8 +498,9 @@ contract HelperConfig is Script, CodeConstants, SepoliaEthereumConstants, AnvilC
 
     function printNetworkConfig(HelperConfig.NetworkConfig memory config) public view {
         console.log("\nNetwork Configuration for chainid:", block.chainid);
+        console.log("block number:", block.number);
         console.log("------------------------------------");
-        console.log("ERC20 Contracts:");
+        console.log("\nERC20 Contracts:");
         console.log("  LINK Token:", address(config.erc20Contracts.link_token));
         console.log("  USDC Token:", address(config.erc20Contracts.usdc_token));
         console.log("  Pool Token 0:", Currency.unwrap(config.erc20Contracts.pool_token0));

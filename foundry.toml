@@ -2,6 +2,8 @@
 src = "src"
 out = "out"
 libs = ["lib"]
+# Exclude the brevis directory from the build for now -> stack too deep error
+exclude = ["src/brevis"]
 
 solc_version = '0.8.26'
 evm_version = "cancun"
@@ -18,5 +20,6 @@ fs_permissions = [
 [profile.coverage]
 optimizer = true
 optimizer_runs = 1000000
-via_ir = false
+via_ir = true
+src = ["src", "!src/brevis"]
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

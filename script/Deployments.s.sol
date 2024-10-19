@@ -60,7 +60,7 @@ contract DeployContracts is Script, CodeConstants, AnvilConstants, SepoliaEthere
         //Deploy Tokens
         if (address(updatedNetworkConfig.erc20Contracts.link_token) == address(0)) {
             vm.startBroadcast(vm.envUint(envPrivKey[block.chainid]["initialDeployer"]));
-            MockERC20 link_token = new MockERC20("Link Token", "LINK", 18);
+            MockERC20 link_token = new MockERC20("ChainLink Token", "LINK", 18);
             vm.stopBroadcast();
             updatedNetworkConfig.erc20Contracts.link_token = link_token;
             console.log("Link token deployed at", address(link_token));
@@ -69,7 +69,7 @@ contract DeployContracts is Script, CodeConstants, AnvilConstants, SepoliaEthere
         }
         if (address(updatedNetworkConfig.erc20Contracts.usdc_token) == address(0)) {
             vm.startBroadcast(vm.envUint(envPrivKey[block.chainid]["initialDeployer"]));
-            MockERC20 usdc_token = new MockERC20("USDC Token", "USDC", 18);
+            MockERC20 usdc_token = new MockERC20("USDC", "USDC", 18);
             vm.stopBroadcast();
             updatedNetworkConfig.erc20Contracts.usdc_token = usdc_token;
             console.log("USDC token deployed at", address(usdc_token));
