@@ -2,7 +2,7 @@
 
 -include .env
 
-.PHONY: all test clean deploy fund help install snapshot format anvil deploy-fund-approve approve-routers-for-swapper create-muddy-pool create-clear-pool add-liquidity remove-liquidity swap collect-fees whitelist-router remove-whitelist-router add-policy add-IdDocs-to-token add-token remove-token test-sepolia-fork-clean test-sepolia-fork-current test-anvil
+.PHONY: all test clean deploy fund help install snapshot format anvil deploy-fund-approve approve-routers-for-swapper create-muddy-pool create-clear-pool add-liquidity remove-liquidity swap collect-fees whitelist-router remove-whitelist-router add-policy add-IdDocs-to-token add-token remove-token test-sepolia-fork-clean test-sepolia-fork-current test-anvil test-all
 
 DEFAULT_ANVIL_KEY := 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 
@@ -71,8 +71,9 @@ test-anvil:
 	@FORKED_TEST=true forge test --via-ir --fork-url http://localhost:8545 $(if $(TEST_NAME),--match-test $(TEST_NAME) -vvvv,)
 test:
 	@FORKED_TEST=false forge test --via-ir $(if $(TEST_NAME),--match-test $(TEST_NAME) -vvvv,)
-
-
+test-all:
+	make test && make test-anvil && make test-sepolia-fork-clean && make test-sepolia-fork-current
+	
 # Interactions with the deployed contracts
 approve-routers-for-swapper:;
 	@forge script script/Interactions.s.sol:ApproveRoutersForSwappers --sender $(SENDER_ADDRESS) $(NETWORK_ARGS)

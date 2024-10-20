@@ -8,6 +8,8 @@ import {KYCHook} from "../src/hooks/KYCHook.sol";
 import {WhitelistPolicy} from "../src/policies/WhitelistPolicy.sol";
 import {BlacklistPolicy} from "../src/policies/BlacklistPolicy.sol";
 import {KYCRouter} from "../src/routers/KYCRouter.sol";
+import {MaliciousRouter} from "../src/routers/MaliciousRouter.sol";
+import {LazyRouter} from "../src/routers/LazyRouter.sol";
 import {PoolSwapTest} from "v4-core/test/PoolSwapTest.sol";
 import {PoolModifyLiquidityTest} from "v4-core/test/PoolModifyLiquidityTest.sol";
 import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
@@ -241,8 +243,8 @@ contract HelperConfig is Script, CodeConstants, SepoliaEthereumConstants, AnvilC
 
     struct RouterContracts {
         KYCRouter kycRouter;
-        KYCRouter maliciousRouter;
-        KYCRouter carelessRouter;
+        MaliciousRouter maliciousRouter;
+        LazyRouter carelessRouter;
         PoolSwapTest swapRouter;
         PoolModifyLiquidityTest modifyLiquidityRouter;
     }
@@ -406,8 +408,8 @@ contract HelperConfig is Script, CodeConstants, SepoliaEthereumConstants, AnvilC
         config.hookContracts.kycHook = KYCHook(KYC_HOOK_SEPOLIA);
         // Routers
         config.routerContracts.kycRouter = KYCRouter(KYC_ROUTER_SEPOLIA);
-        config.routerContracts.maliciousRouter = KYCRouter(MALICIOUS_ROUTER_SEPOLIA);
-        config.routerContracts.carelessRouter = KYCRouter(CARELESS_ROUTER_SEPOLIA);
+        config.routerContracts.maliciousRouter = MaliciousRouter(MALICIOUS_ROUTER_SEPOLIA);
+        config.routerContracts.carelessRouter = LazyRouter(CARELESS_ROUTER_SEPOLIA);
         config.routerContracts.swapRouter = PoolSwapTest(SWAP_ROUTER_SEPOLIA);
         config.routerContracts.modifyLiquidityRouter = PoolModifyLiquidityTest(MODIFY_LIQUIDITY_ROUTER_SEPOLIA);
         // Policy
@@ -471,8 +473,8 @@ contract HelperConfig is Script, CodeConstants, SepoliaEthereumConstants, AnvilC
         config.hookContracts.kycHook = KYCHook(address(0x0));
         // Routers  
         config.routerContracts.kycRouter = KYCRouter(address(0x0));
-        config.routerContracts.maliciousRouter = KYCRouter(address(0x0));
-        config.routerContracts.carelessRouter = KYCRouter(address(0x0));
+        config.routerContracts.maliciousRouter = MaliciousRouter(address(0x0));
+        config.routerContracts.carelessRouter = LazyRouter(address(0x0));
         config.routerContracts.swapRouter = PoolSwapTest(address(0x0));
         config.routerContracts.modifyLiquidityRouter = PoolModifyLiquidityTest(address(0x0));
         // Policy

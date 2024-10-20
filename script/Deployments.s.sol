@@ -13,6 +13,8 @@ import {BlackWhitelistPolicy} from "../src/policies/BlackWhitelistPolicy.sol";
 import {KYCPolicy} from "../src/base/KYCPolicy.sol";
 import {KYCTokenPolicy} from "../src/policies/KYCTokenPolicy.sol";
 import {KYCRouter} from "../src/routers/KYCRouter.sol";
+import {MaliciousRouter} from "../src/routers/MaliciousRouter.sol";
+import {LazyRouter} from "../src/routers/LazyRouter.sol";
 import {PoolSwapTest} from "v4-core/test/PoolSwapTest.sol";
 import {PoolModifyLiquidityTest} from "v4-core/test/PoolModifyLiquidityTest.sol";
 import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
@@ -136,7 +138,7 @@ contract DeployContracts is Script, CodeConstants, AnvilConstants, SepoliaEthere
         }
         if (address(updatedNetworkConfig.routerContracts.maliciousRouter) == address(0)) {
             vm.startBroadcast(vm.envUint(envPrivKey[block.chainid]["maliciousRouterOwner"]));
-            KYCRouter maliciousRouter = new KYCRouter(updatedNetworkConfig.uniswapV4Contracts.poolManager);
+            MaliciousRouter maliciousRouter = new MaliciousRouter(updatedNetworkConfig.uniswapV4Contracts.poolManager);
             vm.stopBroadcast();
             updatedNetworkConfig.routerContracts.maliciousRouter = maliciousRouter;
             console.log("MaliciousRouter deployed at", address(maliciousRouter));
@@ -145,7 +147,7 @@ contract DeployContracts is Script, CodeConstants, AnvilConstants, SepoliaEthere
         }
         if (address(updatedNetworkConfig.routerContracts.carelessRouter) == address(0)) {
             vm.startBroadcast(vm.envUint(envPrivKey[block.chainid]["carelessRouterOwner"]));
-            KYCRouter carelessRouter = new KYCRouter(updatedNetworkConfig.uniswapV4Contracts.poolManager);
+            LazyRouter carelessRouter = new LazyRouter(updatedNetworkConfig.uniswapV4Contracts.poolManager);
             vm.stopBroadcast();
             updatedNetworkConfig.routerContracts.carelessRouter = carelessRouter;
             console.log("CarelessRouter deployed at", address(carelessRouter));
