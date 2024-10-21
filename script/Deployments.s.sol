@@ -36,6 +36,7 @@ contract DeployContracts is Script, CodeConstants, AnvilConstants, SepoliaEthere
     Currency pool_token0;
     Currency pool_token1;
     InitializeHookWithKYCParams initParams;
+    
 
     constructor() {
         tokenA = MockERC20(address(0));
@@ -268,12 +269,12 @@ contract DeployContracts is Script, CodeConstants, AnvilConstants, SepoliaEthere
 
         // mint  tokens to swapper, liquidity provider, and rogue user
         vm.startBroadcast(vm.envUint(envPrivKey[block.chainid]["initialDeployer"]));
-        tokenA.mint(updatedNetworkConfig.users.swapper, 10 ether);
-        tokenA.mint(updatedNetworkConfig.users.liquidityProvider, 100 ether);
-        tokenA.mint(updatedNetworkConfig.users.rogueUser, 10 ether);
-        tokenB.mint(updatedNetworkConfig.users.swapper, 10 ether);
-        tokenB.mint(updatedNetworkConfig.users.liquidityProvider, 100 ether);
-        tokenB.mint(updatedNetworkConfig.users.rogueUser, 10 ether);
+        tokenA.mint(updatedNetworkConfig.users.swapper, TOKEN_AMOUNT_FOR_SWAPPER);
+        tokenA.mint(updatedNetworkConfig.users.liquidityProvider, TOKEN_AMOUNT_FOR_LIQUIDITY_PROVIDER);
+        tokenA.mint(updatedNetworkConfig.users.rogueUser, TOKEN_AMOUNT_FOR_SWAPPER);
+        tokenB.mint(updatedNetworkConfig.users.swapper, TOKEN_AMOUNT_FOR_SWAPPER);
+        tokenB.mint(updatedNetworkConfig.users.liquidityProvider, TOKEN_AMOUNT_FOR_LIQUIDITY_PROVIDER);
+        tokenB.mint(updatedNetworkConfig.users.rogueUser, TOKEN_AMOUNT_FOR_SWAPPER);
         vm.stopBroadcast();
         console.log("Minted tokens to swapper, liquidity provider, and rogue user");
         // approve the routers to spend the tokens

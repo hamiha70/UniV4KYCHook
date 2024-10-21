@@ -44,7 +44,8 @@ abstract contract CodeConstants {
     address public constant KYC_HOOK_ADDRESS_ANVIL = address(uint160(KYC_HOOK_FLAGS | ANVIL_HOOK_OFFSET));
     // CHAINLINK ADDRESSES ------------------------------------------------------------------------------------------//
     // Swap Parameters -----------------------------------------------------------------------------------------------//
-
+    uint256 constant TOKEN_AMOUNT_FOR_SWAPPER = 10 ether;
+    uint256 constant TOKEN_AMOUNT_FOR_LIQUIDITY_PROVIDER = 100 ether;
     // Pool initialization Parameters --------------------------------------------------------------------------------//
 
     uint160 public constant SQRT_PRICE_1_1 = 79228162514264337593543950336;

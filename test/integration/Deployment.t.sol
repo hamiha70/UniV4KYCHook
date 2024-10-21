@@ -12,8 +12,13 @@ import {LazyRouter} from "../../src/routers/LazyRouter.sol";
 import {MaliciousRouter} from "../../src/routers/MaliciousRouter.sol";
 import {PoolSwapTest} from "v4-core/test/PoolSwapTest.sol";
 import {PoolModifyLiquidityTest} from "v4-core/test/PoolModifyLiquidityTest.sol";
+import {RetailKYCInformation, IdDocumentsBundle, RetailKYC} from "../../src/base/RetailKYC.sol";
+import {KYCTokenPolicy} from "../../src/policies/KYCTokenPolicy.sol";
 
 contract DeploymentTest is Test, AnvilConstants, SepoliaEthereumConstants, EnvLookups {
+    using RetailKYC for IdDocumentsBundle;
+
+    RetailKYCInformation initialRetailKYCInformation;
     HelperConfig helperConfig;
     HelperConfig.NetworkConfig networkConfigBeforeDeployment;
     HelperConfig.NetworkConfig networkConfigAfterDeployment;
@@ -293,6 +298,58 @@ contract DeploymentTest is Test, AnvilConstants, SepoliaEthereumConstants, EnvLo
         assertTrue(hasFunctionImplemented, "Contract does not have the specified function");
     }
 
+    function test_KYCTokenPolicy_Is_Initialized_With_KYCTokenAndPolicyStandard() public onlyForkedTest {
+        // Check that the KYCTokenPolicy is initialized with the KYCToken
+        address contractAddress = address(networkConfigAfterDeployment.policyContracts.kycTokenPolicy);
+        address expectedKycTokenAddress = address(networkConfigAfterDeployment.policyContracts.kycToken);
+        address kycTokenAddress = KYCTokenPolicy(contractAddress).getKYCTokenContractAddress();
+        assertEq(kycTokenAddress, expectedKycTokenAddress, "KYCTokenPolicy is not initialized with the correct KYCToken");
+    }
+
+    function test_KYCTokenPolicy_Is_Initialized_With_Correct_PolicyStandard() public onlyForkedTest {
+        // Check that the policy standard is the initial retail KYC Information as the standard
+        address contractAddress = address(networkConfigAfterDeployment.policyContracts.kycTokenPolicy);
+        RetailKYCInformation memory policyStandard = KYCTokenPolicy(contractAddress).getPolicyStandard();
+        RetailKYCInformation memory expectedStandard = networkConfigAfterDeployment.policyContracts.initialRetailKYCInformation;
+        assertEq(
+            keccak256(abi.encode(policyStandard)), 
+            keccak256(abi.encode(expectedStandard)), 
+            "KYCTokenPolicy is not initialized with the correct policy standard"
+        );
+    }
+
+    function test_swapper_Funded_with_PoolTokens() public onlyForkedTest {
+        // Check that the swapper has the pool tokens
+        address swapper = networkConfigAfterDeployment.users.swapper;
+        uint256 pool_token0_balance = networkConfigAfterDeployment.erc20Contracts.pool_token0.balanceOf(swapper);
+        uint256 pool_token1_balance = networkConfigAfterDeployment.erc20Contracts.pool_token1.balanceOf(swapper);
+        assertTrue(pool_token0_balance > 0, "Swapper does not have any pool_token0");
+        assertTrue(pool_token0_balance >= TOKEN_AMOUNT_FOR_SWAPPER, "Swapper does not have correct amount of pool_token0");
+        assertTrue(pool_token1_balance > 0, "Swapper does not have any pool_token1");
+        assertTrue(pool_token1_balance >= TOKEN_AMOUNT_FOR_SWAPPER, "Swapper does not have correct amount of pool_token1");
+    }
+
+    function test_rogueUser_Funded_with_PoolTokens() public onlyForkedTest {
+        // Check that the rogue user has the pool tokens
+        address rogueUser = networkConfigAfterDeployment.users.rogueUser;
+        uint256 pool_token0_balance = networkConfigAfterDeployment.erc20Contracts.pool_token0.balanceOf(rogueUser);
+        uint256 pool_token1_balance = networkConfigAfterDeployment.erc20Contracts.pool_token1.balanceOf(rogueUser);
+        assertTrue(pool_token0_balance > 0, "Rogue user does not have any pool_token0");
+        assertTrue(pool_token0_balance >= TOKEN_AMOUNT_FOR_SWAPPER, "Rogue user does not have correct amount of pool_token0");
+        assertTrue(pool_token1_balance > 0, "Rogue user does not have any pool_token1");
+        assertTrue(pool_token1_balance >= TOKEN_AMOUNT_FOR_SWAPPER, "Rogue user does not have correct amount of pool_token1");
+    }
+
+    function test_liquidityProvider_Funded_with_PoolTokens() public onlyForkedTest {
+        // Check that the liquidity provider has the pool tokens
+        address liquidityProvider = networkConfigAfterDeployment.users.liquidityProvider;
+        uint256 pool_token0_balance = networkConfigAfterDeployment.erc20Contracts.pool_token0.balanceOf(liquidityProvider);
+        uint256 pool_token1_balance = networkConfigAfterDeployment.erc20Contracts.pool_token1.balanceOf(liquidityProvider);
+        assertTrue(pool_token0_balance > 0, "Liquidity provider does not have any pool_token0");
+        assertTrue(pool_token0_balance >= TOKEN_AMOUNT_FOR_LIQUIDITY_PROVIDER, "Liquidity provider does not have correct amount of pool_token0");
+        assertTrue(pool_token1_balance > 0, "Liquidity provider does not have any pool_token1");
+        assertTrue(pool_token1_balance >= TOKEN_AMOUNT_FOR_LIQUIDITY_PROVIDER, "Liquidity provider does not have correct amount of pool_token1");
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////// 
