@@ -285,6 +285,10 @@ contract DeployContracts is Script, CodeConstants, AnvilConstants, SepoliaEthere
         tokenB.approve(address(updatedNetworkConfig.routerContracts.maliciousRouter), type(uint256).max);
         tokenA.approve(address(updatedNetworkConfig.routerContracts.carelessRouter), type(uint256).max);
         tokenB.approve(address(updatedNetworkConfig.routerContracts.carelessRouter), type(uint256).max);
+        tokenA.approve(address(updatedNetworkConfig.routerContracts.swapRouter), type(uint256).max);
+        tokenB.approve(address(updatedNetworkConfig.routerContracts.swapRouter), type(uint256).max);
+        tokenA.approve(address(updatedNetworkConfig.routerContracts.modifyLiquidityRouter), type(uint256).max);
+        tokenB.approve(address(updatedNetworkConfig.routerContracts.modifyLiquidityRouter), type(uint256).max);
         vm.stopBroadcast();
         console.log("Approved routers to spend tokens on behalf of swapper");
         vm.startBroadcast(vm.envUint(envPrivKey[block.chainid]["liquidityProvider"]));
@@ -294,6 +298,10 @@ contract DeployContracts is Script, CodeConstants, AnvilConstants, SepoliaEthere
         tokenB.approve(address(updatedNetworkConfig.routerContracts.maliciousRouter), type(uint256).max);
         tokenA.approve(address(updatedNetworkConfig.routerContracts.carelessRouter), type(uint256).max);
         tokenB.approve(address(updatedNetworkConfig.routerContracts.carelessRouter), type(uint256).max);
+        tokenA.approve(address(updatedNetworkConfig.routerContracts.swapRouter), type(uint256).max);
+        tokenB.approve(address(updatedNetworkConfig.routerContracts.swapRouter), type(uint256).max);
+        tokenA.approve(address(updatedNetworkConfig.routerContracts.modifyLiquidityRouter), type(uint256).max);
+        tokenB.approve(address(updatedNetworkConfig.routerContracts.modifyLiquidityRouter), type(uint256).max);
         vm.stopBroadcast();
         console.log("Approved routers to spend tokens on behalf of liquidity provider");
         vm.startBroadcast(vm.envUint(envPrivKey[block.chainid]["rogueUser"]));
@@ -303,6 +311,10 @@ contract DeployContracts is Script, CodeConstants, AnvilConstants, SepoliaEthere
         tokenB.approve(address(updatedNetworkConfig.routerContracts.maliciousRouter), type(uint256).max);
         tokenA.approve(address(updatedNetworkConfig.routerContracts.carelessRouter), type(uint256).max);
         tokenB.approve(address(updatedNetworkConfig.routerContracts.carelessRouter), type(uint256).max);
+        tokenA.approve(address(updatedNetworkConfig.routerContracts.swapRouter), type(uint256).max);
+        tokenB.approve(address(updatedNetworkConfig.routerContracts.swapRouter), type(uint256).max);
+        tokenA.approve(address(updatedNetworkConfig.routerContracts.modifyLiquidityRouter), type(uint256).max);
+        tokenB.approve(address(updatedNetworkConfig.routerContracts.modifyLiquidityRouter), type(uint256).max);
         vm.stopBroadcast();
         console.log("Approved routers to spend tokens on behalf of rogue user");
 

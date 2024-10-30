@@ -14,6 +14,9 @@ import {PoolSwapTest} from "v4-core/test/PoolSwapTest.sol";
 import {PoolModifyLiquidityTest} from "v4-core/test/PoolModifyLiquidityTest.sol";
 import {RetailKYCInformation, IdDocumentsBundle, RetailKYC} from "../../src/base/RetailKYC.sol";
 import {KYCTokenPolicy} from "../../src/policies/KYCTokenPolicy.sol";
+import {KYCHook} from "../../src/hooks/KYCHook.sol";
+import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
+import {PoolKey} from "v4-core/types/PoolKey.sol";
 
 contract DeploymentTest is Test, AnvilConstants, SepoliaEthereumConstants, EnvLookups {
     using RetailKYC for IdDocumentsBundle;
@@ -351,11 +354,122 @@ contract DeploymentTest is Test, AnvilConstants, SepoliaEthereumConstants, EnvLo
         assertTrue(pool_token1_balance >= TOKEN_AMOUNT_FOR_LIQUIDITY_PROVIDER, "Liquidity provider does not have correct amount of pool_token1");
     }
 
+    function test_Routers_AreApproved_For_PoolTokens() public onlyForkedTest {
+        // Check that the routers are approved for the pool tokens
+        // Get ERC20 contracts
+        MockERC20 pool_token0 = MockERC20(Currency.unwrap(networkConfigAfterDeployment.erc20Contracts.pool_token0));
+        MockERC20 pool_token1 = MockERC20(Currency.unwrap(networkConfigAfterDeployment.erc20Contracts.pool_token1));
+        // Get the addresses of the users
+        address swapper = networkConfigAfterDeployment.users.swapper;
+        address rogueUser = networkConfigAfterDeployment.users.rogueUser;
+        address liquidityProvider = networkConfigAfterDeployment.users.liquidityProvider;
+        // Get the addresses of the routers
+        address maliciousRouter = address(networkConfigAfterDeployment.routerContracts.maliciousRouter); 
+        address carelessRouter = address(networkConfigAfterDeployment.routerContracts.carelessRouter);
+        address kycRouter = address(networkConfigAfterDeployment.routerContracts.kycRouter);
+        address swapRouter = address(networkConfigAfterDeployment.routerContracts.swapRouter);
+        address modifyLiquidityRouter = address(networkConfigAfterDeployment.routerContracts.modifyLiquidityRouter);
+        // Check that the routers are approved for the pool tokens by the users
+        // Swapper
+        assertTrue(pool_token0.allowance(swapper, kycRouter) > 0, "KYCRouter is not approved for pool_token0 by Swapper");
+        assertTrue(pool_token1.allowance(swapper, kycRouter) > 0, "KYCRouter is not approved for pool_token1 by Swapper");
+        assertTrue(pool_token0.allowance(swapper, swapRouter) > 0, "SwapRouter is not approved for pool_token0 by Swapper");
+        assertTrue(pool_token1.allowance(swapper, swapRouter) > 0, "SwapRouter is not approved for pool_token1 by Swapper");
+        assertTrue(pool_token0.allowance(swapper, maliciousRouter) > 0, "MaliciousRouter is not approved for pool_token0 by Swapper");
+        assertTrue(pool_token1.allowance(swapper, maliciousRouter) > 0, "MaliciousRouter is not approved for pool_token1 by Swapper");
+        assertTrue(pool_token0.allowance(swapper, carelessRouter) > 0, "CarelessRouter is not approved for pool_token0 by Swapper");
+        assertTrue(pool_token1.allowance(swapper, carelessRouter) > 0, "CarelessRouter is not approved for pool_token1 by Swapper");
+        assertTrue(pool_token0.allowance(swapper, modifyLiquidityRouter) > 0, "ModifyLiquidityRouter is not approved for pool_token0 by Swapper");
+        assertTrue(pool_token1.allowance(swapper, modifyLiquidityRouter) > 0, "ModifyLiquidityRouter is not approved for pool_token1 by Swapper");
+        // Rogue User
+        assertTrue(pool_token0.allowance(rogueUser, kycRouter) > 0, "KYCRouter is not approved for pool_token0 by Rogue User");
+        assertTrue(pool_token1.allowance(rogueUser, kycRouter) > 0, "KYCRouter is not approved for pool_token1 by Rogue User");
+        assertTrue(pool_token0.allowance(rogueUser, swapRouter) > 0, "SwapRouter is not approved for pool_token0 by Rogue User");
+        assertTrue(pool_token1.allowance(rogueUser, swapRouter) > 0, "SwapRouter is not approved for pool_token1 by Rogue User");
+        assertTrue(pool_token0.allowance(rogueUser, maliciousRouter) > 0, "MaliciousRouter is not approved for pool_token0 by Rogue User");
+        assertTrue(pool_token1.allowance(rogueUser, maliciousRouter) > 0, "MaliciousRouter is not approved for pool_token1 by Rogue User");
+        assertTrue(pool_token0.allowance(rogueUser, carelessRouter) > 0, "CarelessRouter is not approved for pool_token0 by Rogue User");
+        assertTrue(pool_token1.allowance(rogueUser, carelessRouter) > 0, "CarelessRouter is not approved for pool_token1 by Rogue User");
+        assertTrue(pool_token0.allowance(rogueUser, modifyLiquidityRouter) > 0, "ModifyLiquidityRouter is not approved for pool_token0 by Rogue User");
+        assertTrue(pool_token1.allowance(rogueUser, modifyLiquidityRouter) > 0, "ModifyLiquidityRouter is not approved for pool_token1 by Rogue User");
+        // Liquidity Provider
+        assertTrue(pool_token0.allowance(liquidityProvider, kycRouter) > 0, "KYCRouter is not approved for pool_token0 by Liquidity Provider");
+        assertTrue(pool_token1.allowance(liquidityProvider, kycRouter) > 0, "KYCRouter is not approved for pool_token1 by Liquidity Provider");
+        assertTrue(pool_token0.allowance(liquidityProvider, swapRouter) > 0, "SwapRouter is not approved for pool_token0 by Liquidity Provider");
+        assertTrue(pool_token1.allowance(liquidityProvider, swapRouter) > 0, "SwapRouter is not approved for pool_token1 by Liquidity Provider");
+        assertTrue(pool_token0.allowance(liquidityProvider, maliciousRouter) > 0, "MaliciousRouter is not approved for pool_token0 by Liquidity Provider");
+        assertTrue(pool_token1.allowance(liquidityProvider, maliciousRouter) > 0, "MaliciousRouter is not approved for pool_token1 by Liquidity Provider");
+        assertTrue(pool_token0.allowance(liquidityProvider, carelessRouter) > 0, "CarelessRouter is not approved for pool_token0 by Liquidity Provider");
+        assertTrue(pool_token1.allowance(liquidityProvider, carelessRouter) > 0, "CarelessRouter is not approved for pool_token1 by Liquidity Provider");
+    }
+
+    function test_KYCHook_has_Correct_Functions_Implemented() public onlyForkedTest {
+        // Check that the KYCHook has a beforeInitialize function implementedd
+        address contractAddress = address(networkConfigAfterDeployment.hookContracts.kycHook);
+        bytes4 functionSelector = bytes4(keccak256("beforeInitialize(address,(address,address,uint24,int24,address),uint160,bytes)"));
+        bool hasFunctionImplemented = hasFunction(contractAddress, functionSelector);
+        assertTrue(hasFunctionImplemented, "Contract does not have the specified function");
+        console.log("KYCHook ... checked beforeInitialize function");
+        // Check that the KYCHook has an afterInitialize function implemented
+        functionSelector = bytes4(keccak256("afterInitialize(address,(address,address,uint24,int24,address),uint160,int24,bytes)"));
+        hasFunctionImplemented = hasFunction(contractAddress, functionSelector);
+        assertTrue(hasFunctionImplemented, "Contract does not have the specified function");
+        console.log("KYCHook ... checked afterInitialize function");
+        // Check that the KYCHook has a beforeSwap function implemented
+        functionSelector = bytes4(keccak256("beforeSwap(address,(address,address,uint24,int24,address),(bool,int256,uint160),bytes)"));
+        hasFunctionImplemented = hasFunction(contractAddress, functionSelector);
+        assertTrue(hasFunctionImplemented, "Contract does not have the specified function");
+        console.log("KYCHook ... checked beforeSwap function");
+        // Check that the KYCHook has a beforeAddLiquidity function implemented
+        functionSelector = bytes4(keccak256("beforeAddLiquidity(address,(address,address,uint24,int24,address),(int24,int24,int256,bytes32),bytes)"));
+        hasFunctionImplemented = hasFunction(contractAddress, functionSelector);
+        assertTrue(hasFunctionImplemented, "Contract does not have the specified function");
+        console.log("KYCHook ... checked beforeAddLiquidity function");
+        // Check that the KYCHook has a updateKYCPolicy function implemented
+        functionSelector = bytes4(keccak256("updateKYCPolicy((address,address,uint24,int24,address),(address,bool))"));
+        hasFunctionImplemented = hasFunction(contractAddress, functionSelector);
+        assertTrue(hasFunctionImplemented, "Contract does not have the specified function");
+        console.log("KYCHook ... checked updateKYCPolicy function");
+        // Check that the KYCHook has a getHookOwner function implemented
+        functionSelector = bytes4(keccak256("getHookOwner()"));
+        hasFunctionImplemented = hasFunction(contractAddress, functionSelector);
+        assertTrue(hasFunctionImplemented, "Contract does not have the specified function");
+        console.log("KYCHook ... checked getHookOwner function");
+        // Check that the KYCHook has a getIsKYCHook function implemented
+        functionSelector = bytes4(keccak256("getIsKYCHook()"));
+        hasFunctionImplemented = hasFunction(contractAddress, functionSelector);
+        assertTrue(hasFunctionImplemented, "Contract does not have the specified function");
+        console.log("KYCHook ... checked getIsKYCHook function");
+        // Check that the KYCHook has a updateRouterWhitelist function implemented
+        functionSelector = bytes4(keccak256("updateRouterWhitelist(address[],bool)"));
+        hasFunctionImplemented = hasFunction(contractAddress, functionSelector);
+        assertTrue(hasFunctionImplemented, "Contract does not have the specified function");
+        console.log("KYCHook ... checked updateRouterWhitelist function");
+        // Check that the KYCHook has a isRouterWhitelisted function implemented
+        functionSelector = bytes4(keccak256("isRouterWhitelisted(address)"));
+        hasFunctionImplemented = hasFunction(contractAddress, functionSelector);
+        assertTrue(hasFunctionImplemented, "Contract does not have the specified function");
+        console.log("KYCHook ... checked isRouterWhitelisted function");
+        // Check that the KYCHook has a getKYCPolicyAddress function implemented
+        functionSelector = bytes4(keccak256("getKYCPolicyAddress((address,address,uint24,int24,address))"));
+        hasFunctionImplemented = hasFunction(contractAddress, functionSelector);
+        assertTrue(hasFunctionImplemented, "Contract does not have the specified function");
+        console.log("KYCHook ... checked getKYCPolicyAddress function");
+        // Check that the KYCHook has a getPoolCreator function implemented
+        functionSelector = bytes4(keccak256("getPoolCreator((address,address,uint24,int24,address))"));
+        hasFunctionImplemented = hasFunction(contractAddress, functionSelector);
+        assertTrue(hasFunctionImplemented, "Contract does not have the specified function");
+        console.log("KYCHook ... checked getPoolCreator function");
+    }
+
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////// 
     // HELPERS
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////   
-
+    
+    // @dev Check if a contract has a function implemented
+    // checks if the function selector is present in the contract code !!! FALSE POSITIVES MIGHT HAPPEN !!!
     function hasFunction(address contractAddress, bytes4 functionSelector) internal view returns (bool) {
         uint256 size;
         assembly {
@@ -374,4 +488,7 @@ contract DeploymentTest is Test, AnvilConstants, SepoliaEthereumConstants, EnvLo
         }
         return false;
     }
+
+
+    
 }
