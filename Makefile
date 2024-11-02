@@ -76,7 +76,7 @@ test-all:
 test-clean:
 	make test && make test-anvil && make test-sepolia-fork-clean
 test-current:
-	make test-sepolia-fork-current
+	make test-sepolia-fork-current $(if $(TEST_cNAME),--match-test $(TEST_NAME) -vvvv,)
 	
 # Interactions with the deployed contracts
 approve-routers-for-swapper:;

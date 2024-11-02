@@ -16,10 +16,14 @@ import {RetailKYCInformation, IdDocumentsBundle, RetailKYC} from "../../src/base
 import {KYCTokenPolicy} from "../../src/policies/KYCTokenPolicy.sol";
 import {KYCHook} from "../../src/hooks/KYCHook.sol";
 import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
+import {PoolManager} from "v4-core/PoolManager.sol";
+
 import {PoolKey} from "v4-core/types/PoolKey.sol";
 
 contract DeploymentTest is Test, AnvilConstants, SepoliaEthereumConstants, EnvLookups {
     using RetailKYC for IdDocumentsBundle;
+
+    error PoolAlreadyInitialized();
 
     RetailKYCInformation initialRetailKYCInformation;
     HelperConfig helperConfig;
@@ -460,6 +464,20 @@ contract DeploymentTest is Test, AnvilConstants, SepoliaEthereumConstants, EnvLo
         hasFunctionImplemented = hasFunction(contractAddress, functionSelector);
         assertTrue(hasFunctionImplemented, "Contract does not have the specified function");
         console.log("KYCHook ... checked getPoolCreator function");
+    }
+
+    function test_nonKYC_Pool_is_Initialized() public onlyForkedTest {
+        PoolManager poolManager = PoolManager(address(networkConfigAfterDeployment.uniswapV4Contracts.poolManager));
+        // Expect revert if the pool is already initialized ... during the deployment
+        vm.expectRevert(PoolAlreadyInitialized.selector);
+        poolManager.initialize(networkConfigAfterDeployment.nonKycPool.key, networkConfigAfterDeployment.nonKycPool.sqrtPriceX96, networkConfigAfterDeployment.nonKycPool.hookData);
+    }
+
+    function test_KYC_Pool_is_Initialized() public onlyForkedTest {
+        PoolManager poolManager = PoolManager(address(networkConfigAfterDeployment.uniswapV4Contracts.poolManager));
+        // Expect revert if the pool is already initialized ... during the deployment
+        vm.expectRevert(PoolAlreadyInitialized.selector);
+        poolManager.initialize(networkConfigAfterDeployment.kycPool.key, networkConfigAfterDeployment.kycPool.sqrtPriceX96, networkConfigAfterDeployment.kycPool.hookData);
     }
 
 
