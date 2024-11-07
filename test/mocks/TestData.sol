@@ -6,9 +6,9 @@ import {HelperConfig, AnvilConstants, SepoliaEthereumConstants} from "../../scri
 import {IHooks} from "v4-core/interfaces/IHooks.sol";
 import {Currency} from "v4-core/types/Currency.sol";
 import {console} from "forge-std/console.sol";
+import {PoolManager} from "v4-core/PoolManager.sol";
 
 contract TestData {
-
     address public immutable TOKEN_0_ADDRESS;
     address public immutable TOKEN_1_ADDRESS;
     uint24 public constant TEST_FEE = 500;
@@ -22,6 +22,9 @@ contract TestData {
 
     PoolKey public TEST_NON_KYC_POOL_KEY;
     PoolKey public TEST_KYC_POOL_KEY;
+
+    PoolManager.ModifyLiquidityParams public TEST_MODIFY_LIQUIDITY_PARAMS;
+    PoolManager.SwapParams public TEST_SWAP_PARAMS;
 
     constructor(HelperConfig.NetworkConfig memory _networkConfig) {
         networkConfig = _networkConfig;
@@ -53,5 +56,4 @@ contract TestData {
     function getTestKycPoolKey() public view returns (PoolKey memory) {
         return TEST_KYC_POOL_KEY;
     }
-
 }
