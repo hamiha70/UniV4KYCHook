@@ -48,5 +48,4 @@ contract ProvideLiquidity is Script {
         PoolManager poolManager = PoolManager(payable(mostRecentlyDeployed));
         provideLiquidity(poolManager, poolKey, liquidityProvider, amount0, amount1);
     }
-}
 */

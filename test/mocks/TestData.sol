@@ -7,6 +7,7 @@ import {IHooks} from "v4-core/interfaces/IHooks.sol";
 import {Currency} from "v4-core/types/Currency.sol";
 import {console} from "forge-std/console.sol";
 import {PoolManager} from "v4-core/PoolManager.sol";
+import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
 
 contract TestData {
     address public immutable TOKEN_0_ADDRESS;
@@ -23,7 +24,7 @@ contract TestData {
     PoolKey public TEST_NON_KYC_POOL_KEY;
     PoolKey public TEST_KYC_POOL_KEY;
 
-    PoolManager.ModifyLiquidityParams public TEST_MODIFY_LIQUIDITY_PARAMS;
+    IPoolManager.ModifyLiquidityParams public TEST_MODIFY_LIQUIDITY_PARAMS;
     PoolManager.SwapParams public TEST_SWAP_PARAMS;
 
     constructor(HelperConfig.NetworkConfig memory _networkConfig) {
@@ -47,6 +48,11 @@ contract TestData {
             tickSpacing: TEST_TICK_SPACING,
             hooks: KYC_HOOK
         });
+
+        TEST_MODIFY_LIQUIDITY_PARAMS =
+            IPoolManager.ModifyLiquidityParams({tickLower: 0, tickUpper: 0, liquidityDelta: 0, salt: bytes32(0)});
+
+        TEST_SWAP_PARAMS = IPoolManager.SwapParams({zeroForOne: true, amountSpecified: 0, sqrtPriceLimitX96: 0});
     }
 
     function getTestNonKycPoolKey() public view returns (PoolKey memory) {

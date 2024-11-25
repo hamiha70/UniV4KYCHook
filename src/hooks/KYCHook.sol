@@ -161,16 +161,19 @@ contract KYCHook is Ownable, BaseHook, KYCEvents {
         IPoolManager.SwapParams calldata params,
         bytes calldata hookData
     ) public virtual override onlyByPoolManager returns (bytes4, BeforeSwapDelta, uint24) {
+        PoolId poolId = key.toId();
         // If KYC is not required, do not perform any checks
-        if (!isKYCRequired[key.toId()]) {
+        if (!isKYCRequired[poolId]) {
             return (this.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, 0);
         }
         if (!isWhitelistedRouters[sender]) revert KYCHook__RouterNotWhitelisted(sender);
-        try KYCPolicy(policyAddress[key.toId()]).msgSenderFromHookData(hookData) returns (address swapper) {
-            if (!KYCPolicy(policyAddress[key.toId()]).validateSwapAuthorization(swapper, key, params)) {
+
+        address policy = policyAddress[poolId];
+        try KYCPolicy(policy).msgSenderFromHookData(hookData) returns (address swapper) {
+            if (!KYCPolicy(policy).validateSwapAuthorization(swapper, key, params)) {
                 revert KYCHook__NoKYCPermission(sender, swapper);
             }
-            emit SwapThroughKYCHook(key.toId(), sender, swapper, key, params, policyAddress[key.toId()], hookData);
+            emit SwapThroughKYCHook(poolId, sender, swapper, key, params, policy, hookData);
         } catch {
             revert KYCHook__PolicyMisbehaving__CallToMsgSenderFromHookDataReverted();
         }

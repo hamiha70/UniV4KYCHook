@@ -19,3 +19,6 @@ docs/
 
 # Cursor editor related
 .cursorignore
+
+# Gas snapshot
+.gas-snapshot
