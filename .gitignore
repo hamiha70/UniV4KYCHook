@@ -22,3 +22,7 @@ docs/
 
 # Gas snapshot
 .gas-snapshot
+
+# vscode configuration
+.vscode/
+
